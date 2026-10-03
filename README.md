@@ -18,6 +18,7 @@ try (MideaAirConditioner ac = new MideaAirConditioner(cfg)) {
 ## Contents
 
 - [Features](#features)
+- [Download](#download)
 - [Getting started](#getting-started)
 - [Command line tool](#command-line-tool)
 - [Using the API](#using-the-api)
@@ -46,11 +47,32 @@ try (MideaAirConditioner ac = new MideaAirConditioner(cfg)) {
 - **Background polling** with listeners, heartbeats and automatic reconnect.
 - **No dependencies.** Not even for the tests or the bit of JSON the cloud login needs.
 
+## Download
+
+Prebuilt jars come from the CI server: [builds.mirranet.de/job/midea-ac](https://builds.mirranet.de/job/midea-ac/).
+
+To use it from Maven without building it yourself, add the repository and the dependency:
+
+```xml
+<repositories>
+    <repository>
+        <id>mirranet</id>
+        <url>https://builds.mirranet.de/plugin/repository/everything/</url>
+    </repository>
+</repositories>
+
+<dependency>
+    <groupId>de.mirranet</groupId>
+    <artifactId>midea-ac</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 ## Getting started
 
 You need Java 17 or newer and a machine on the same network as the air conditioner.
 
-**1. Build**
+**1. Build** (or grab the jar from [Download](#download) and skip this step)
 
 ```sh
 git clone https://github.com/LinzN/midea-ac.git
@@ -118,17 +140,7 @@ options: --port 6444   --beep false   --debug
 
 ## Using the API
 
-Install the library into your local Maven repository with `mvn install`, then:
-
-```xml
-<dependency>
-    <groupId>de.mirranet</groupId>
-    <artifactId>midea-ac</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-Or put the jar on the classpath. Everything you normally need is in `de.mirranet.midea.ac`.
+Add the MirraNET repository and the dependency as shown under [Download](#download), or run `mvn install` on a local checkout and use just the dependency. Or put the jar on the classpath. Everything you normally need is in `de.mirranet.midea.ac`.
 
 ### Connecting
 
