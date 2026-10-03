@@ -53,7 +53,7 @@ You need Java 17 or newer and a machine on the same network as the air condition
 **1. Build**
 
 ```sh
-git clone https://github.com/<you>/midea-ac.git
+git clone https://github.com/LinzN/midea-ac.git
 cd midea-ac
 mvn package
 ```
@@ -362,5 +362,7 @@ The tests need no network and no unit. They check, byte for byte, that requests,
 ## Credits and license
 
 The protocol work is entirely the effort of the [midea-local](https://github.com/midea-lan/midea-local) contributors and the projects it grew out of (midea_ac_lan, msmart). This is a translation of their code to Java. midea-local is MIT licensed; its license is reproduced in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+This project is released under the MIT License as well, see [LICENSE](LICENSE). You're free to use, change and redistribute it, including in commercial projects, as long as the copyright notice stays in.
 
 This project isn't affiliated with or endorsed by Midea. Midea, MSmartHome and NetHome Plus are trademarks of their owners.
