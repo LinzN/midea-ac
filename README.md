@@ -15,6 +15,8 @@ try (MideaAirConditioner ac = new MideaAirConditioner(cfg)) {
 }
 ```
 
+> **More in the [wiki](https://github.com/LinzN/midea-ac/wiki):** step-by-step setup, the full API reference, a [protocol overview](https://github.com/LinzN/midea-ac/wiki/Protocol-Overview) of what goes over the wire, and [troubleshooting](https://github.com/LinzN/midea-ac/wiki/Troubleshooting) for common problems.
+
 ## Contents
 
 - [Features](#features)
