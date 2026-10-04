@@ -52,6 +52,15 @@ public final class AllTests {
         near("C0 indoor", 24.5, s.indoorTemperature);
         near("C0 outdoor", 18.3, s.outdoorTemperature);
 
+        // 16 C on units with the alternate set point field: byte 2 says 17, byte 13 says 4 (+12)
+        p.apply(frame("aa24ac00000000000303c00181000000000000000062562400000000000000000000000c"), s);
+        near("C0 alternate set point 16", 16.0, s.targetTemperature);
+        eq("C0 filter flag next to alternate field", true, s.fullDust);
+        p.apply(frame("aa24ac00000000000303c00191000000000000000062560400000000000000000000001c"), s);
+        near("C0 alternate set point 16.5", 16.5, s.targetTemperature);
+        p.apply(frame("aa24ac00000000000303c00157280000003c0010006256000035000000000000000000b1"), s);
+        near("C0 without alternate field unchanged", 23.5, s.targetTemperature);
+
         p.apply(frame("aa2cac00000000000303b1064200000102150000013718000001010a00000132cd000001033900000101000076"), s);
         eq("B1 indirect wind", true, s.indirectWind);
         eq("B1 humidity", 55, s.indoorHumidity);

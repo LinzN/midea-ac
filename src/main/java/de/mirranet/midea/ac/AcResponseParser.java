@@ -150,6 +150,13 @@ final class AcResponseParser {
         s.power = (u(b, 1) & 0x01) > 0;
         s.modeRaw = (u(b, 2) & 0xE0) >> 5;
         s.targetTemperature = (u(b, 2) & 0x0F) + 16.0 + ((u(b, 2) & 0x10) > 0 ? 0.5 : 0.0);
+        // Units that go below 17 C also send the set point as "degrees - 12" in the low 5 bits of
+        // byte 13. At 16 C the field above still says 17, so this one wins when it's set.
+        // midea-local ignores it; msmart-ng reads it the same way.
+        int alternate = u(b, 13) & 0x1F;
+        if (alternate != 0) {
+            s.targetTemperature = alternate + 12.0 + ((u(b, 2) & 0x10) > 0 ? 0.5 : 0.0);
+        }
         s.fanSpeedRaw = u(b, 3) & 0x7F;
         s.swingVertical = (u(b, 7) & 0x0C) > 0;
         s.swingHorizontal = (u(b, 7) & 0x03) > 0;
