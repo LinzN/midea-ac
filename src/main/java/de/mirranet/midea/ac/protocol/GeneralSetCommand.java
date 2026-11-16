@@ -31,6 +31,8 @@ public final class GeneralSetCommand {
     public boolean frostProtect;
     public boolean comfort;
     public boolean anion;
+    /** Regulate on the temperature reported by the remote ("Follow Me", "iSense"). */
+    public boolean followMe;
 
     public GeneralSetCommand copy() {
         GeneralSetCommand c = new GeneralSetCommand();
@@ -53,6 +55,7 @@ public final class GeneralSetCommand {
         c.frostProtect = frostProtect;
         c.comfort = comfort;
         c.anion = anion;
+        c.followMe = followMe;
         return c;
     }
 
@@ -73,7 +76,8 @@ public final class GeneralSetCommand {
         b[1] = (byte) (((mode << 5) & 0xE0) | temp | (half ? 0x10 : 0));
         b[2] = (byte) (fanSpeed & 0x7F);
         b[6] = (byte) (0x30 | (swingVertical ? 0x0C : 0) | (swingHorizontal ? 0x03 : 0));
-        b[7] = (byte) ((boost ? 0x20 : 0) | (powerSaving ? 0x08 : 0));
+        // follow me bit as in msmart-ng; midea-local doesn't send it
+        b[7] = (byte) ((followMe ? 0x80 : 0) | (boost ? 0x20 : 0) | (powerSaving ? 0x08 : 0));
         b[8] = (byte) ((smartEye ? 0x01 : 0) | (dry ? 0x04 : 0) | (auxHeating ? 0x08 : 0)
                 | (eco ? 0x80 : 0) | (anion ? 0x20 : 0));
         // boost is sent twice, here and in byte 7

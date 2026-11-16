@@ -339,6 +339,7 @@ public final class MideaAirConditioner implements AutoCloseable {
         c.frostProtect = state.frostProtect;
         c.comfort = state.comfort;
         c.anion = state.anion;
+        c.followMe = state.followMe;
         return c;
     }
 
@@ -383,6 +384,7 @@ public final class MideaAirConditioner implements AutoCloseable {
         state.frostProtect = c.frostProtect;
         state.comfort = c.comfort;
         state.anion = c.anion;
+        state.followMe = c.followMe;
     }
 
     /** Shortcut for {@code control().on().send()}. The other setters below work the same way. */
@@ -412,6 +414,32 @@ public final class MideaAirConditioner implements AutoCloseable {
 
     public AcState setPreset(Preset preset) throws IOException {
         return control().preset(preset).send();
+    }
+
+    /**
+     * Reports the room temperature for Follow Me ("iSense"), so the unit regulates on an external
+     * sensor instead of its own. Follow Me has to be on, see {@link AcControl#followMe(boolean)}.
+     *
+     * <p><b>Experimental.</b> This is not part of midea-local; the message comes from an open pull
+     * request for msmart-ng and was tested on a few Midea models only. Like the remote, send the
+     * value again every couple of minutes; how long the unit keeps it without updates is not known.
+     * A remote in Follow Me mode within IR range overwrites the value with its own reading.
+     *
+     * @param celsius room temperature, 0 to 37, rounded to 0.5
+     * @return the state after the unit's answer
+     * @throws IllegalArgumentException outside 0 to 37 or not a finite number
+     */
+    public synchronized AcState sendFollowMeTemperature(double celsius) throws IOException {
+        if (!Double.isFinite(celsius) || celsius < 0 || celsius > 37) {
+            throw new IllegalArgumentException("Follow Me temperature must be between 0 and 37 C: " + celsius);
+        }
+        double rounded = Math.round(celsius * 2) / 2.0;
+        io(() -> exchange(AcMessages.followMeTemperature(messageProtocolVersion, nextMessageId(), rounded),
+                body(0xC0)));
+        state.followMeTemperature = rounded;
+        AcState snapshot = state.copy();
+        notifyListeners(snapshot);
+        return snapshot;
     }
 
     /**

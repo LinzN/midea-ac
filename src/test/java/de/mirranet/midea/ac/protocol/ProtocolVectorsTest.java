@@ -60,6 +60,13 @@ public final class ProtocolVectorsTest {
                 Hex.encode(AcMessages.groupQuery(3, AcMessages.GROUP_ENERGY)));
         eq("C1 humidity query", "aa11ac00000000000303412101450001a2f2",
                 Hex.encode(AcMessages.groupQuery(3, AcMessages.GROUP_HUMIDITY)));
+        // example frame from mill1000/midea-msmart#298: 23.5 C, protocol version 0, message id 1
+        eq("follow me temperature", "aa19ac00000000000003" + "412100ff0161" + "00000000000000" + "01ef85",
+                Hex.encode(AcMessages.followMeTemperature(0, 1, 23.5)));
+        GeneralSetCommand fm = new GeneralSetCommand();
+        fm.followMe = true;
+        ok("follow me bit in 0x40 byte 8", (AcMessages.generalSet(3, 1, fm)[10 + 8] & 0x80) != 0);
+
         eq("display toggle", "aa20ac00000000000303414200ff0200020000000000000000000000000009faa5",
                 Hex.encode(AcMessages.toggleDisplay(3, 9, true)));
         eq("appliance query", "aa1dac000000000000a00000000000000000000000000000000000000097",

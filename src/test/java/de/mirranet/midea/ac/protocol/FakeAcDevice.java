@@ -37,6 +37,10 @@ public final class FakeAcDevice implements AutoCloseable {
     public volatile int fan = 102;
     public volatile boolean swingV;
     public volatile boolean eco;
+    public volatile boolean followMe;
+    /** Raw indoor temperature byte; Follow Me reports replace it, like on the real units. */
+    public volatile int indoorRaw = 50 + 2 * 23;
+    public volatile int followMeReports;
     public volatile boolean display = true;
     public volatile int setCommands;
     public volatile int toggles;
@@ -158,6 +162,10 @@ public final class FakeAcDevice implements AutoCloseable {
         int bt = f.bodyType();
         if (bt == 0x41 && (b[1] & 0xFF) == 0x81) {
             out.add(status(AcMessages.MSG_QUERY));
+        } else if (bt == 0x41 && (b[1] & 0xFF) == 0x21 && (b[2] & 0xFF) == 0x00 && (b[4] & 0xFF) == 0x01) {
+            followMeReports++;
+            indoorRaw = b[5] & 0xFF;
+            out.add(status(AcMessages.MSG_QUERY));
         } else if (bt == 0x41 && (b[1] & 0xFF) == 0x21) {
             if ((b[3] & 0xFF) == 0x44) {
                 byte[] c1 = Hex.decode("c121014400012345000012340000056700891200000000");
@@ -173,6 +181,7 @@ public final class FakeAcDevice implements AutoCloseable {
             mode = (b[2] & 0xE0) >> 5;
             target = (b[2] & 0x0F) + 16 + ((b[2] & 0x10) != 0 ? 0.5 : 0);
             fan = b[3] & 0x7F;
+            followMe = (b[8] & 0x80) != 0;
             swingV = (b[7] & 0x0C) != 0;
             eco = (b[9] & 0x80) != 0;
             out.add(status(AcMessages.MSG_SET));
@@ -196,8 +205,9 @@ public final class FakeAcDevice implements AutoCloseable {
         c0[2] = (byte) ((mode << 5) | ((t - 16) & 0x0F) | (target - t >= 0.5 ? 0x10 : 0));
         c0[3] = (byte) fan;
         c0[7] = (byte) (swingV ? 0x0C : 0);
+        c0[8] = (byte) (followMe ? 0x80 : 0);
         c0[9] = (byte) (eco ? 0x10 : 0);
-        c0[11] = (byte) (50 + 2 * 23); // 23.x indoor
+        c0[11] = (byte) indoorRaw;      // 23.x indoor unless Follow Me replaced it
         c0[12] = (byte) (50 + 2 * 9);  // 9.x outdoor
         c0[14] = (byte) (display ? 0x00 : 0x70);
         c0[15] = (byte) 0x24;          // decimals: indoor .4, outdoor .2

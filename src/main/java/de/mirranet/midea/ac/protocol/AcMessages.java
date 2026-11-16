@@ -113,6 +113,24 @@ public final class AcMessages {
     }
 
     /**
+     * Reports a room temperature for Follow Me, the way the remote does over IR.
+     *
+     * <p>Not part of midea-local. The layout comes from an open pull request for msmart-ng
+     * (mill1000/midea-msmart#298), which was tested on a few Midea models only. The temperature uses
+     * the usual {@code T * 2 + 50} encoding; the unit answers with an 0xC0 status.
+     *
+     * @param celsius 0 to 37, in 0.5 steps
+     */
+    public static byte[] followMeTemperature(int protocolVersion, int messageId, double celsius) {
+        byte[] p = new byte[12];
+        p[0] = 0x21;
+        p[2] = (byte) 0xFF;
+        p[3] = 0x01;
+        p[4] = (byte) Math.round(celsius * 2 + 50);
+        return Frame.build(DEVICE_TYPE, protocolVersion, MSG_QUERY, body(0x41, p, messageId));
+    }
+
+    /**
      * Toggles the LED display ({@code MessageToggleDisplay}). There is no "display on/off" command,
      * only this toggle, and it goes out as a query frame.
      */

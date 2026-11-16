@@ -31,6 +31,8 @@ public final class AcState {
     boolean frostProtect;
     boolean comfort;
     boolean anion;
+    boolean followMe;
+    Double followMeTemperature;
     boolean screenDisplay;
     boolean fullDust;
     Double indoorTemperature;
@@ -106,6 +108,8 @@ public final class AcState {
         c.frostProtect = frostProtect;
         c.comfort = comfort;
         c.anion = anion;
+        c.followMe = followMe;
+        c.followMeTemperature = followMeTemperature;
         c.screenDisplay = screenDisplay;
         c.fullDust = fullDust;
         c.indoorTemperature = indoorTemperature;
@@ -236,6 +240,16 @@ public final class AcState {
     public boolean isComfort() { return comfort; }
     /** Ioniser. */
     public boolean isAnion() { return anion; }
+    /**
+     * Follow Me ("iSense"): the unit regulates on a temperature reported from outside instead of
+     * its own sensor. See {@link MideaAirConditioner#sendFollowMeTemperature(double)}.
+     */
+    public boolean isFollowMe() { return followMe; }
+    /**
+     * Last temperature sent with {@link MideaAirConditioner#sendFollowMeTemperature(double)}, in
+     * 0.5 steps. {@code null} if nothing was sent by this client. The unit doesn't report it back.
+     */
+    public Double getFollowMeTemperature() { return followMeTemperature; }
     public boolean isScreenDisplay() { return screenDisplay; }
     /** Display state on units that report it through the new protocol instead of 0xC0. */
     public boolean isScreenDisplayAlternate() { return screenDisplayAlternate; }

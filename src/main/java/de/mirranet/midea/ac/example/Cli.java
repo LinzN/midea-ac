@@ -35,6 +35,7 @@ import java.util.logging.Logger;
  *                             fetch and check token/key; uses the shared account without --cloud
  * status --ip IP --id ID [--protocol 2|3] [--token T --key K]
  * set    --ip IP --id ID ... power=on mode=cool temp=22.5 fan=auto swing=off preset=eco
+ *                             followme=on followmetemp=21.5 (experimental)
  * watch  --ip IP --id ID ... [--interval 30]
  * </pre>
  *
@@ -76,9 +77,15 @@ public final class Cli {
             case "set" -> {
                 try (MideaAirConditioner ac = new MideaAirConditioner(config(opt))) {
                     ac.refresh();
+                    // the Follow Me temperature is its own message, sent after the settings
+                    String followMeTemp = assignments.remove("followmetemp");
                     AcControl c = ac.control();
                     assignments.forEach((k, v) -> apply(c, k, v));
-                    System.out.println(c.send());
+                    AcState s = assignments.isEmpty() ? ac.getState() : c.send();
+                    if (followMeTemp != null) {
+                        s = ac.sendFollowMeTemperature(Double.parseDouble(followMeTemp));
+                    }
+                    System.out.println(s);
                 }
             }
             case "watch" -> {
@@ -148,6 +155,7 @@ public final class Cli {
             case "fan" -> c.fanSpeed(FanSpeed.valueOf(v.toUpperCase(Locale.ROOT)));
             case "swing" -> c.swing(SwingMode.valueOf(v.toUpperCase(Locale.ROOT)));
             case "preset" -> c.preset(Preset.valueOf(v.toUpperCase(Locale.ROOT)));
+            case "followme" -> c.followMe(v.equals("on") || v.equals("true") || v.equals("1"));
             default -> throw new IllegalArgumentException("Unknown setting " + k);
         }
     }
@@ -175,6 +183,7 @@ public final class Cli {
                   keys   --ip IP [--cloud msmart|nethome|mideaair --user U --password P]
                   status --ip IP --id ID [--protocol 2|3] [--token T --key K]
                   set    --ip IP --id ID [...] power=on mode=cool temp=22.5 fan=auto swing=off preset=eco
+                                              followme=on followmetemp=21.5
                   watch  --ip IP --id ID [...] [--interval 30]
                   options: --port 6444 --beep false --debug""");
     }

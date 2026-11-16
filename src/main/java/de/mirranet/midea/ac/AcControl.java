@@ -161,6 +161,16 @@ public final class AcControl {
         return this;
     }
 
+    /**
+     * Follow Me ("iSense" in some manuals): the unit regulates on a temperature reported from
+     * outside instead of its own sensor. Report it with
+     * {@link MideaAirConditioner#sendFollowMeTemperature(double)}.
+     */
+    public AcControl followMe(boolean on) {
+        cmd.followMe = on;
+        return this;
+    }
+
     /** Switches the unit's display to Fahrenheit. This API keeps using Celsius either way. */
     public AcControl fahrenheitDisplay(boolean on) {
         cmd.fahrenheit = on;

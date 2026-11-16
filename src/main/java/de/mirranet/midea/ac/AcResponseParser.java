@@ -163,6 +163,7 @@ final class AcResponseParser {
         s.boost = (u(b, 8) & 0x20) > 0 || (u(b, 10) & 0x02) > 0;
         s.powerSaving = (u(b, 8) & 0x08) > 0;
         s.smartEye = (u(b, 8) & 0x40) > 0;
+        s.followMe = (u(b, 8) & 0x80) > 0;
         s.pmv = (u(b, 14) & 0x0F) * 0.5 - 3.5;
         s.naturalWind = (u(b, 9) & 0x02) > 0;
         s.dry = (u(b, 9) & 0x04) > 0;

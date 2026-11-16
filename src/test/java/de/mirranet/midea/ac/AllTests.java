@@ -60,6 +60,9 @@ public final class AllTests {
         near("C0 alternate set point 16.5", 16.5, s.targetTemperature);
         p.apply(frame("aa24ac00000000000303c00157280000003c0010006256000035000000000000000000b1"), s);
         near("C0 without alternate field unchanged", 23.5, s.targetTemperature);
+        eq("C0 follow me off", false, s.isFollowMe());
+        p.apply(frame("aa24ac00000000000303c0014700000000008000006256000000000000000000000000ea"), s);
+        eq("C0 follow me on", true, s.isFollowMe());
 
         p.apply(frame("aa2cac00000000000303b1064200000102150000013718000001010a00000132cd000001033900000101000076"), s);
         eq("B1 indirect wind", true, s.indirectWind);
@@ -181,6 +184,23 @@ public final class AllTests {
                 ac.setScreenDisplay(false);
                 eq("display toggled", 1, dev.toggles);
                 eq("display state", false, ac.getState().isScreenDisplay());
+
+                s = ac.control().followMe(true).send();
+                eq("device follow me", true, dev.followMe);
+                eq("confirmed follow me", true, s.isFollowMe());
+                s = ac.sendFollowMeTemperature(19.3);
+                eq("follow me report sent", 1, dev.followMeReports);
+                near("follow me rounded", 19.5, s.getFollowMeTemperature());
+                // the fake keeps its fixed .4 decimal nibble, so 19.5 comes back as 19.4
+                near("unit echoes follow me temperature", 19.4, s.getIndoorTemperature());
+                try {
+                    ac.sendFollowMeTemperature(40);
+                    ok("follow me range checked", false);
+                } catch (IllegalArgumentException e) {
+                    ok("follow me range checked", dev.followMeReports == 1);
+                }
+                ac.control().followMe(false).send();
+                eq("follow me off again", false, dev.followMe);
 
                 ac.setBreezeless(true);
                 eq("breezeless echo", true, ac.getState().isBreezeless());
