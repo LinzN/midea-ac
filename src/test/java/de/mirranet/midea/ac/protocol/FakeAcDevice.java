@@ -44,6 +44,8 @@ public final class FakeAcDevice implements AutoCloseable {
     public volatile boolean display = true;
     public volatile int setCommands;
     public volatile int toggles;
+    public volatile boolean respondToEnergy = true;
+    public volatile int energyQueries;
 
     public FakeAcDevice(ProtocolVersion protocol) throws IOException {
         this.protocol = protocol;
@@ -168,8 +170,11 @@ public final class FakeAcDevice implements AutoCloseable {
             out.add(status(AcMessages.MSG_QUERY));
         } else if (bt == 0x41 && (b[1] & 0xFF) == 0x21) {
             if ((b[3] & 0xFF) == 0x44) {
-                byte[] c1 = Hex.decode("c121014400012345000012340000056700891200000000");
-                out.add(Frame.build(0xAC, 3, AcMessages.MSG_QUERY, c1));
+                energyQueries++;
+                if (respondToEnergy) {
+                    byte[] c1 = Hex.decode("c121014400012345000012340000056700891200000000");
+                    out.add(Frame.build(0xAC, 3, AcMessages.MSG_QUERY, c1));
+                }
             } // other groups: unsupported
         } else if (bt == 0x41 && (b[1] & 0x02) != 0 && (b[4] & 0xFF) == 0x02) {
             display = !display;

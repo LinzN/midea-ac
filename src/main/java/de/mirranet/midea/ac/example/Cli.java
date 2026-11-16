@@ -89,10 +89,11 @@ public final class Cli {
                 }
             }
             case "watch" -> {
-                MideaAirConditioner ac = new MideaAirConditioner(config(opt));
-                ac.addListener(s -> System.out.println(java.time.LocalTime.now() + " " + s));
-                ac.startPolling(Duration.ofSeconds(Long.parseLong(opt.getOrDefault("interval", "30"))));
-                Thread.currentThread().join();
+                try (MideaAirConditioner ac = new MideaAirConditioner(config(opt))) {
+                    ac.addListener(s -> System.out.println(java.time.LocalTime.now() + " " + s));
+                    ac.startPolling(Duration.ofSeconds(Long.parseLong(opt.getOrDefault("interval", "30"))));
+                    Thread.currentThread().join();
+                }
             }
             default -> usage();
         }
