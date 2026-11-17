@@ -418,7 +418,12 @@ public final class MideaAirConditioner implements AutoCloseable {
 
     /**
      * Reports the room temperature for Follow Me ("iSense"), so the unit regulates on an external
-     * sensor instead of its own. Follow Me has to be on, see {@link AcControl#followMe(boolean)}.
+     * sensor instead of its own. If the unit doesn't report Follow Me as on yet, it is switched on
+     * first (see {@link AcControl#followMe(boolean)}), which needs a refresh if none happened yet.
+     *
+     * <p>Units that take the value report it as {@link AcState#getIndoorTemperature()}, the
+     * temperature they regulate on. {@link AcState#getIndoorAmbientTemperature()} stays the reading
+     * of the built-in sensor.
      *
      * <p><b>Experimental.</b> This is not part of midea-local; the message comes from an open pull
      * request for msmart-ng and was tested on a few Midea models only. Like the remote, send the
@@ -434,6 +439,12 @@ public final class MideaAirConditioner implements AutoCloseable {
             throw new IllegalArgumentException("Follow Me temperature must be between 0 and 37 C: " + celsius);
         }
         double rounded = Math.round(celsius * 2) / 2.0;
+        if (state.lastUpdate == null) {
+            refresh(); // never send a full 0x40 command built from unknown state
+        }
+        if (!state.followMe) {
+            control().followMe(true).send();
+        }
         io(() -> exchange(AcMessages.followMeTemperature(messageProtocolVersion, nextMessageId(), rounded),
                 body(0xC0)));
         state.followMeTemperature = rounded;

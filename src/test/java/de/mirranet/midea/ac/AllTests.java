@@ -201,6 +201,10 @@ public final class AllTests {
                 }
                 ac.control().followMe(false).send();
                 eq("follow me off again", false, dev.followMe);
+                ac.sendFollowMeTemperature(21);
+                eq("sending a temperature switches follow me on", true, dev.followMe);
+                eq("second report sent", 2, dev.followMeReports);
+                ac.control().followMe(false).send();
 
                 ac.setBreezeless(true);
                 eq("breezeless echo", true, ac.getState().isBreezeless());
