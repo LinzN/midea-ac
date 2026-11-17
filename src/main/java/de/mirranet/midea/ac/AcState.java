@@ -301,7 +301,7 @@ public final class AcState {
     public Integer getCompressorCurrent() { return compressorCurrent; }
     /** Raw value, unit not documented. */
     public Integer getCompressorVoltage() { return compressorVoltage; }
-    /** T1, indoor return air. */
+    /** T1, indoor return air. On some units this follows the Follow Me temperature. */
     public Double getIndoorAmbientTemperature() { return indoorAmbientTemperature; }
     /** T2, indoor coil. */
     public Double getIndoorCoilTemperature() { return indoorCoilTemperature; }

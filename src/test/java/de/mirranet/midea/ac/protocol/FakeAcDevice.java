@@ -38,6 +38,8 @@ public final class FakeAcDevice implements AutoCloseable {
     public volatile boolean swingV;
     public volatile boolean eco;
     public volatile boolean followMe;
+    /** Behaves like units that ignore the Follow Me bit in set commands. */
+    public volatile boolean ignoreFollowMe;
     /** Raw indoor temperature byte; Follow Me reports replace it, like on the real units. */
     public volatile int indoorRaw = 50 + 2 * 23;
     public volatile int followMeReports;
@@ -186,7 +188,9 @@ public final class FakeAcDevice implements AutoCloseable {
             mode = (b[2] & 0xE0) >> 5;
             target = (b[2] & 0x0F) + 16 + ((b[2] & 0x10) != 0 ? 0.5 : 0);
             fan = b[3] & 0x7F;
-            followMe = (b[8] & 0x80) != 0;
+            if (!ignoreFollowMe) {
+                followMe = (b[8] & 0x80) != 0;
+            }
             swingV = (b[7] & 0x0C) != 0;
             eco = (b[9] & 0x80) != 0;
             out.add(status(AcMessages.MSG_SET));

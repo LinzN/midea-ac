@@ -215,6 +215,19 @@ public final class AllTests {
                 eq("second report sent", 2, dev.followMeReports);
                 ac.control().followMe(false).send();
 
+                // unit ignores the flag (PortaSplit): try once, then only send reports
+                dev.ignoreFollowMe = true;
+                int setsBefore = dev.setCommands;
+                ac.sendFollowMeTemperature(20);
+                eq("ignored follow me: one attempt", setsBefore + 1, dev.setCommands);
+                eq("ignored follow me: stays off", false, ac.getState().isFollowMe());
+                ac.sendFollowMeTemperature(20.5);
+                ac.sendFollowMeTemperature(21);
+                eq("ignored follow me: no retry", setsBefore + 1, dev.setCommands);
+                eq("ignored follow me: reports still sent", 5, dev.followMeReports);
+                dev.ignoreFollowMe = false;
+                ac.resetProtocolProbe();
+
                 ac.setBreezeless(true);
                 eq("breezeless echo", true, ac.getState().isBreezeless());
 

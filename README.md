@@ -68,7 +68,7 @@ To use it from Maven without building it yourself, add the repository and the de
 <dependency>
     <groupId>de.mirranet</groupId>
     <artifactId>midea-ac</artifactId>
-    <version>1.1.2</version>
+    <version>1.1.3</version>
 </dependency>
 ```
 
@@ -84,12 +84,12 @@ cd midea-ac
 mvn package
 ```
 
-This gives you `target/midea-ac-1.1.2.jar`, which is both the library and a command line tool.
+This gives you `target/midea-ac-1.1.3.jar`, which is both the library and a command line tool.
 
 **2. Find the unit**
 
 ```sh
-java -jar target/midea-ac-1.1.2.jar discover
+java -jar target/midea-ac-1.1.3.jar discover
 ```
 
 ```
@@ -103,7 +103,7 @@ Note the `id`, the `ip` and the protocol. A V2 unit needs nothing else; skip to 
 V3 units only accept connections with a token and key that the Midea cloud hands out. You fetch them once:
 
 ```sh
-java -jar target/midea-ac-1.1.2.jar keys --ip 192.168.1.50 --cloud msmart --user you@example.com --password secret
+java -jar target/midea-ac-1.1.3.jar keys --ip 192.168.1.50 --cloud msmart --user you@example.com --password secret
 ```
 
 Use `--cloud nethome` or `--cloud mideaair` if that's the app your unit is paired with. Without `--cloud`, the tool uses the shared account Home Assistant ships with, which often works too.
@@ -121,7 +121,7 @@ Store both somewhere safe. They stay valid until the unit is reset or paired aga
 **4. Try it**
 
 ```sh
-java -jar target/midea-ac-1.1.2.jar status --ip 192.168.1.50 --id 151732605161920 --token ... --key ...
+java -jar target/midea-ac-1.1.3.jar status --ip 192.168.1.50 --id 151732605161920 --token ... --key ...
 ```
 
 The first status call can take up to a minute. See [How it behaves](#how-it-behaves) for why.
@@ -270,14 +270,16 @@ With Follow Me (called iSense in some manuals) the unit regulates on a room temp
 ac.sendFollowMeTemperature(21.3);   // sent as 21.5; repeat every couple of minutes
 ```
 
-- Sending a temperature switches Follow Me on first if the unit doesn't have it on yet. To switch it off again, use `ac.control().followMe(false).send()`.
-- A unit that takes the value reports it as `AcState.getIndoorTemperature()`, the temperature it regulates on. `getIndoorAmbientTemperature()` stays the reading of the built-in sensor, so don't compare against that one.
+- Sending a temperature switches Follow Me on first if the unit doesn't have it on yet. If the unit doesn't confirm that, the library logs a warning and doesn't try again (every attempt is a full set command, so the unit would beep on each report). To switch Follow Me off again, use `ac.control().followMe(false).send()`.
+- A unit that takes the value reports it as `AcState.getIndoorTemperature()`, the temperature it regulates on. On some units `getIndoorAmbientTemperature()` (T1) follows it as well.
 - `AcState.isFollowMe()` shows whether the unit has Follow Me on (also when the remote switched it on), `getFollowMeTemperature()` the last value this client sent. A value the remote sends over IR is not reported separately; it shows up as the indoor temperature as well.
 - Values from 0 to 37 °C, in 0.5 steps.
 - Send the value again every couple of minutes, like the remote does. How long a unit keeps it without updates is not known yet.
 - A remote in Follow Me mode within IR range overwrites the value with its own reading after a few minutes.
 
-> **Experimental.** Switching Follow Me on and off is well known (msmart-ng does the same). Reporting the temperature is not part of midea-local; the message comes from an [open pull request for msmart-ng](https://github.com/mill1000/midea-msmart/pull/298) and was tested on a few Midea models only. It did not work on a Midea PortaSplit (model `2060008E`, protocol version 8) in a first test, see [#1](https://github.com/LinzN/midea-ac/issues/1). If it works or doesn't work on your unit, please say so in an issue, with the model code.
+> **Experimental.** Switching Follow Me on and off is well known (msmart-ng does the same). Reporting the temperature is not part of midea-local; the message comes from an [open pull request for msmart-ng](https://github.com/mill1000/midea-msmart/pull/298) and was tested on a few Midea models only. If it works or doesn't work on your unit, please say so in an issue, with the model code.
+
+**Known not to work over Wi-Fi:** Midea PortaSplit (model `2060008E`, protocol version 8). The unit beeps but ignores the Follow Me flag, and doesn't answer the temperature report at all. Switched on with the remote, Follow Me works and is shown correctly: `isFollowMe()` is `true` and the indoor temperature is the remote's reading. See [#1](https://github.com/LinzN/midea-ac/issues/1).
 
 ### Capabilities
 

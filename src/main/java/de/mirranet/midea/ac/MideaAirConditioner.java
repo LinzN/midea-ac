@@ -54,6 +54,8 @@ public final class MideaAirConditioner implements AutoCloseable {
     private final List<Consumer<AcState>> listeners = new CopyOnWriteArrayList<>();
     private final Set<String> unsupported = new HashSet<>();
     private final Set<String> supportedQueries = new HashSet<>();
+    /** Set once the unit ignored switching Follow Me on, so it isn't retried on every report. */
+    private boolean followMeRejected;
     private final Set<String> answeredOnce = new HashSet<>();
 
     private AcState state = new AcState();
@@ -311,6 +313,7 @@ public final class MideaAirConditioner implements AutoCloseable {
     public synchronized void resetProtocolProbe() {
         unsupported.clear();
         supportedQueries.clear();
+        followMeRejected = false;
         answeredOnce.clear();
         applianceQueryDone = false;
     }
@@ -425,10 +428,16 @@ public final class MideaAirConditioner implements AutoCloseable {
      * Reports the room temperature for Follow Me ("iSense"), so the unit regulates on an external
      * sensor instead of its own. If the unit doesn't report Follow Me as on yet, it is switched on
      * first (see {@link AcControl#followMe(boolean)}), which needs a refresh if none happened yet.
+     * If the unit doesn't confirm that, a warning is logged and this client doesn't try again
+     * (each attempt is a full set command, so the unit would beep on every report).
      *
      * <p>Units that take the value report it as {@link AcState#getIndoorTemperature()}, the
-     * temperature they regulate on. {@link AcState#getIndoorAmbientTemperature()} stays the reading
-     * of the built-in sensor.
+     * temperature they regulate on. On some units {@link AcState#getIndoorAmbientTemperature()}
+     * (T1) follows it as well.
+     *
+     * <p>Not every unit takes Follow Me over Wi-Fi. A Midea PortaSplit (model 2060008E) ignores
+     * both the flag and the temperature report, but shows Follow Me correctly when the remote
+     * switches it on.
      *
      * <p><b>Experimental.</b> This is not part of midea-local; the message comes from an open pull
      * request for msmart-ng and was tested on a few Midea models only. Like the remote, send the
@@ -447,8 +456,13 @@ public final class MideaAirConditioner implements AutoCloseable {
         if (state.lastUpdate == null) {
             refresh(); // never send a full 0x40 command built from unknown state
         }
-        if (!state.followMe) {
+        if (!state.followMe && !followMeRejected) {
             control().followMe(true).send();
+            if (!state.followMe) {
+                followMeRejected = true;
+                LOG.warning("Unit did not confirm Follow Me; it probably can't be switched on over"
+                        + " Wi-Fi. Reporting the temperature anyway, without retrying.");
+            }
         }
         io(() -> exchange(AcMessages.followMeTemperature(messageProtocolVersion, nextMessageId(), rounded),
                 body(0xC0)));
