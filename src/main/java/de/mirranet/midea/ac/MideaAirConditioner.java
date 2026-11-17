@@ -53,6 +53,7 @@ public final class MideaAirConditioner implements AutoCloseable {
     private final AcResponseParser parser = new AcResponseParser();
     private final List<Consumer<AcState>> listeners = new CopyOnWriteArrayList<>();
     private final Set<String> unsupported = new HashSet<>();
+    private final Set<String> supportedQueries = new HashSet<>();
     private final Set<String> answeredOnce = new HashSet<>();
 
     private AcState state = new AcState();
@@ -254,9 +255,9 @@ public final class MideaAirConditioner implements AutoCloseable {
      * Reads the full status from the unit.
      *
      * <p>The first call is slow: it tries every optional query (energy, humidity, service data,
-     * capabilities ...) and waits for the response timeout on each one the unit ignores. Those are
-     * remembered and skipped from then on, so later calls only take a moment. Capabilities are
-     * read once.
+     * capabilities ...) and waits for the response timeout on each one the unit ignores. Queries
+     * that never get an answer are skipped from then on; queries that have answered successfully
+     * are retried on every refresh. Capabilities are read once.
      *
      * @return a snapshot of the new state
      * @throws MideaException.Timeout if the unit doesn't answer the basic status query
@@ -275,11 +276,14 @@ public final class MideaAirConditioner implements AutoCloseable {
                 }
                 boolean ok = probe(q.frame().apply(nextMessageId()), q.expect());
                 if (ok) {
+                    supportedQueries.add(q.name());
                     if (q.once()) {
                         answeredOnce.add(q.name());
                     }
                 } else if (q.core()) {
                     throw new MideaException.Timeout("Device did not answer the status query");
+                } else if (supportedQueries.contains(q.name())) {
+                    LOG.fine(() -> "Query '" + q.name() + "' did not answer; will retry next refresh");
                 } else {
                     LOG.fine(() -> "Query '" + q.name() + "' not supported, skipping from now on");
                     unsupported.add(q.name());
@@ -306,6 +310,7 @@ public final class MideaAirConditioner implements AutoCloseable {
      */
     public synchronized void resetProtocolProbe() {
         unsupported.clear();
+        supportedQueries.clear();
         answeredOnce.clear();
         applianceQueryDone = false;
     }

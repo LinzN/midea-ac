@@ -68,7 +68,7 @@ To use it from Maven without building it yourself, add the repository and the de
 <dependency>
     <groupId>de.mirranet</groupId>
     <artifactId>midea-ac</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 </dependency>
 ```
 
@@ -84,12 +84,12 @@ cd midea-ac
 mvn package
 ```
 
-This gives you `target/midea-ac-1.1.1.jar`, which is both the library and a command line tool.
+This gives you `target/midea-ac-1.1.2.jar`, which is both the library and a command line tool.
 
 **2. Find the unit**
 
 ```sh
-java -jar target/midea-ac-1.1.1.jar discover
+java -jar target/midea-ac-1.1.2.jar discover
 ```
 
 ```
@@ -103,7 +103,7 @@ Note the `id`, the `ip` and the protocol. A V2 unit needs nothing else; skip to 
 V3 units only accept connections with a token and key that the Midea cloud hands out. You fetch them once:
 
 ```sh
-java -jar target/midea-ac-1.1.1.jar keys --ip 192.168.1.50 --cloud msmart --user you@example.com --password secret
+java -jar target/midea-ac-1.1.2.jar keys --ip 192.168.1.50 --cloud msmart --user you@example.com --password secret
 ```
 
 Use `--cloud nethome` or `--cloud mideaair` if that's the app your unit is paired with. Without `--cloud`, the tool uses the shared account Home Assistant ships with, which often works too.
@@ -121,7 +121,7 @@ Store both somewhere safe. They stay valid until the unit is reset or paired aga
 **4. Try it**
 
 ```sh
-java -jar target/midea-ac-1.1.1.jar status --ip 192.168.1.50 --id 151732605161920 --token ... --key ...
+java -jar target/midea-ac-1.1.2.jar status --ip 192.168.1.50 --id 151732605161920 --token ... --key ...
 ```
 
 The first status call can take up to a minute. See [How it behaves](#how-it-behaves) for why.
@@ -347,7 +347,7 @@ Cloud options: `MideaCloud.msmartHome(user, pw)`, `netHomePlus(user, pw)`, `mide
 
 ## How it behaves
 
-- **The first refresh is slow.** It tries every optional query (energy, humidity, service data, capabilities). Each one the unit ignores costs two response timeouts, after which it's skipped for the lifetime of the client. Later refreshes take well under a second. `resetProtocolProbe()` starts the detection over.
+- **The first refresh is slow.** It tries every optional query (energy, humidity, service data, capabilities). A query that never gets a response is skipped from then on; after a query has answered once, it is retried on every refresh even if a later attempt times out. Capabilities are read once. `resetProtocolProbe()` starts the detection over.
 - **Commands are optimistic.** The client takes the new values immediately, then overwrites them with whatever the unit confirms. This stops a quick second command from being built on the old state and switching the unit back off. If no confirmation comes, the call doesn't fail.
 - **One client per unit.** Many Wi-Fi modules accept only one TCP connection at a time. A client is safe to share between threads; calls are serialized.
 - **Self cleaning** takes the unit a moment to report. For at least 30 seconds after `setSelfClean()`, reports that still show the old state are ignored.

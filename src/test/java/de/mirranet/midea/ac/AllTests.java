@@ -163,6 +163,15 @@ public final class AllTests {
                 long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
                 ok("unsupported queries skipped on 2nd refresh (" + ms + " ms)", ms < 1000);
 
+                int energyQueries = dev.energyQueries;
+                dev.respondToEnergy = false;
+                ac.refresh();
+                eq("energy queried after temporary misses", energyQueries + 2, dev.energyQueries);
+                dev.respondToEnergy = true;
+                s = ac.refresh();
+                eq("energy query resumed after temporary misses", energyQueries + 3, dev.energyQueries);
+                near("energy restored after temporary misses", 123.45, s.getTotalEnergyConsumption());
+
                 s = ac.control().mode(OperatingMode.HEAT).targetTemperature(22.5).fanSpeed(FanSpeed.LOW)
                         .swing(SwingMode.VERTICAL).preset(Preset.ECO).send();
                 eq("device power", true, dev.power);
